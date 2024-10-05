@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 import json
 import random
@@ -42,18 +43,32 @@ def get_data(url, n):
         'x-requested-with': 'XMLHttpRequest',
     }
     response = requests.get(url=url, headers=headers)
-    print(f'Статус код страницы: {response.status_code}')  # response.status_code)
+
+    # response.status_code
+    try:
+        response.raise_for_status()
+        print(f'Статус код страницы: {response.status_code}')
+    except requests.HTTPError as error:
+        print(f'Возникла ошибка: {error}')
+        exit()
 
     scrap = cloudscraper.create_scraper()
+    cur_date = datetime.now().strftime('%d-%m-%Y')
     page = 1
     apartments_data_dict = []
     valid_count = 0  # Счетчик валидных объявлений
+    print(f'{page}-я страница в обработке')
 
     while valid_count < n:
         url = f'https://www.farpost.ru/vladivostok/realty/sell_flats/?page={page}'
         response = scrap.get(url=url, cookies=cookies, headers=headers)
         soup = BeautifulSoup(response.text, 'lxml')
         apartments_cards = soup.find_all('div', class_='descriptionCell bull-item__cell bull-item__description-cell')
+
+        # Проверка: если список объявлений пуст, завершить цикл
+        if not apartments_cards:
+            print(f'Список объявлений пуст на странице {page}. Прекращение работы.')
+            break  # Завершаем цикл, если список пуст
 
         for apartment_card in apartments_cards:
             try:
@@ -95,39 +110,50 @@ def get_data(url, n):
                 'not found' not in apartment_url
             ):
                 apartments_data_dict.append({
-                    'description': apartment_description,
-                    'square': apartment_square,
-                    'price': apartment_price,
-                    'square price': apartment_square_price,
-                    'url': apartment_url
+                    'Описание': apartment_description,
+                    'Общая площадь': apartment_square,
+                    'Цена': apartment_price,
+                    'Цена за кв.м': apartment_square_price,
+                    'url-ссылка': apartment_url
                 })
                 valid_count += 1  # Увеличиваем счетчик валидных объявлений
                 print(f'Валидных объявлений: {valid_count}')
+                time.sleep(random.randrange(2, 15))
 
             # Прерывание после достижения n валидных объявлений
-            if valid_count == n:
-                break
-                print(f'Найдено {valid_count} валидных объявлений.')
+            try:
+                if valid_count == n:
+                    print(f'Найдено {valid_count} валидных объявлений.')
+                    break
+            except Exception:
+                print(f'Работа приложения завершена')
 
-        time.sleep(random.randrange(2, 15))
-        page += 1
+        if valid_count == n:
+            break
+        elif page == 1 and len(apartments_data_dict) == 0:
+            print(f'Ошибка: после обработки первой страницы список объявлений пуст. Captcha time! Рестарт парсера через 30 минут.')
+            break  # Остановка программы, если нет объявлений после первой страницы
+        else:
+            print(f'количество валидных объявлений: {valid_count}')
+            time.sleep(random.randrange(10, 35))
+            page += 1
+            print(f'{page}-я страница в обработке')
+            print()
 
-        print(f'количество валидных объявлений: {valid_count}')
-        print(page)
-        print()
 
     # Сохранение данных в JSON
-    with open('/data/apartments_data_dict.json', 'w', encoding='utf-8') as file:
+    with open(f'data/apartments_data_dict_{cur_date}.json', 'w', encoding='utf-8') as file:
         json.dump(apartments_data_dict, file, indent=4, ensure_ascii=False)
 
-    with open('/data/apartments_data_dict.json', encoding='utf-8') as file:
+    with open(f'data/apartments_data_dict_{cur_date}.json', encoding='utf-8') as file:
         data = json.load(file)
 
     # Создание Excel таблицы
     df = pd.DataFrame.from_dict(data)
-    df.to_excel('/data/data.xlsx', index=False, engine='openpyxl')
+    df['Дата'] = cur_date
+    df.to_excel(f'data/data_{cur_date}.xlsx', index=False, engine='openpyxl')
 
 
 if __name__ == '__main__':
     # Укажите количество валидных объявлений, после которых нужно прекратить выполнение
-    get_data('https://www.farpost.ru/vladivostok/realty/sell_flats/?page=1', n=300)
+    get_data('https://www.farpost.ru/vladivostok/realty/sell_flats/?page=1', n=42)
