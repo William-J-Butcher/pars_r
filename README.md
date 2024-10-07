@@ -6,38 +6,38 @@ ___
 <details>
 <summary>Чтобы получить более подробную информацию об установке, нажмите здесь.</summary>
 
-### Шаг 1: Обновление
+### - Обновление
 Сначала обновите существующий список пакетов, чтобы убедиться, что вы загружаете последние версии.
 
 ```
 $ sudo apt-get update
 ```
-### Шаг 2: Установка зависимостей
+### - Установка зависимостей
 Установите необходимые пакеты, чтобы разрешить apt использовать репозитории по HTTPS:
 ```commandline
 $ sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
 ```
-### Шаг 3: Добавьте GPG-ключ Docker
+### - Добавьте GPG-ключ Docker
 Добавьте официальный ключ GPG Docker, чтобы ваша система доверяла репозиторию Docker:
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 ```
-### Шаг 4: Добавьте репозиторий Docker
+### - Добавьте репозиторий Docker
 Добавьте репозиторий Docker APT в список источников Ubuntu:
 ```commandline
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
-### Шаг 5: Повторное обновление базы данных пакетов.
+### - Повторное обновление базы данных пакетов.
 Обновите базу данных пакетов, добавив в нее пакеты Docker из недавно добавленного репозитория:
 ```commandline
 sudo apt update
 ```
-### Шаг 6: Установка Docker
+### - Установка Docker
 Теперь установите Docker:
 ```commandline
 sudo apt install docker-ce docker-ce-cli containerd.io
 ```
-### Шаг 7: Проверка установки Docker
+### - Проверка установки Docker
 После установки проверьте правильность работы Docker, проверив версию:
 ```commandline
 sudo docker --version
@@ -59,8 +59,8 @@ $ docker build -t parser .
 $ docker run -it --rm -v /home:/data parser
 ```
 
-### 6. Настройка планировщика задач Cron
-<details>]
+### 5. Настройка планировщика задач Cron
+<details>
 
 
 <summary>
